@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import CheckboxInput from './CheckboxInput'
 import SingleInput from './SingleInput';
 import ErrorList from './ErrorList';
+import { getXSRFToken } from '../utils';
 
 class DatabaseForm extends Component {
     constructor(props) {
@@ -72,7 +73,8 @@ class DatabaseForm extends Component {
             credentials: 'include',
             headers: {
                 'Accept': 'application/json',
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'RequestVerificationToken' : getXSRFToken()
             },
             body: JSON.stringify(data)
         })

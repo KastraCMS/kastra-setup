@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import SingleInput from './SingleInput';
 import ErrorList from './ErrorList';
+import { getXSRFToken } from '../utils';
 
 class AccountForm extends Component {
     constructor(props) {
@@ -63,7 +64,8 @@ class AccountForm extends Component {
             credentials: 'include',
             headers: {
                 'Accept': 'application/json',
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'RequestVerificationToken' : getXSRFToken()
             },
             body: JSON.stringify(data)
         })
