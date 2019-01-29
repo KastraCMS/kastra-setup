@@ -85,11 +85,9 @@ class AccountForm extends Component {
                         this.props.setLoading(false, "");
                     });
                 });
+            } else {
+                document.location.href="/";
             }
-            return res;
-        })
-        .then(() => {
-            document.location.href="/";
         }).catch((error) => {
             console.log('Error: \n', error.message);
         });

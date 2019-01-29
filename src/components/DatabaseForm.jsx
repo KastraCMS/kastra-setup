@@ -87,11 +87,9 @@ class DatabaseForm extends Component {
                         this.props.setLoading(false, "");
                     });
                 });
+            } else {
+                setTimeout(() => this.props.checkDatabase(), 4000);
             }
-            return res.json();
-        })
-        .then((result) => {
-            this.props.checkDatabase();
         }).catch((error) => {
             console.log('Error: \n', error.message);
         });
