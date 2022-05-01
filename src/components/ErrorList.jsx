@@ -1,29 +1,28 @@
+// Libs
 import React from 'react';
 
-const ErrorList = (props) =>  {
-    let message;
+export const ErrorList = ({ messages, message }) => {
+    let displayedMessage;
 
-    if(props.messages !== undefined && props.messages.length > 0) {
-        message = (<ul>
-            {props.messages.map((message, index) => {
+    if (messages && messages.length > 0) {
+        displayedMessage = (<ul>
+            {messages.map((message, index) => {
                 return (
                     <li key={index}>{message}</li>
                 );
             })}
         </ul>);
     } else {
-        message = props.message;
+        displayedMessage = message;
     }
 
-    if(message === undefined || message === null || message.length === 0) {
+    if (!displayedMessage || displayedMessage.length === 0) {
         return null;
     }
 
     return (
         <div className="text-danger validation-summary-errors">
-            {message}
+            {displayedMessage}
         </div>
     );
 }
-
-export default ErrorList;

@@ -1,131 +1,150 @@
-import React, { Component } from 'react';
-import CheckboxInput from './CheckboxInput'
-import SingleInput from './SingleInput';
-import ErrorList from './ErrorList';
-import { getXSRFToken } from '../utils';
+// Libs
+import React, { useState } from "react";
 
-class DatabaseForm extends Component {
-    constructor(props) {
-        super(props);
+// Components
+import { CheckboxInput } from "./CheckboxInput"
+import { SingleInput } from "./SingleInput";
+import { ErrorList } from "./ErrorList";
 
-        this.handleChange = this.handleChange.bind(this);
-        this.handleSubmit = this.handleSubmit.bind(this);
+// Utils
+import { getXSRFToken } from "../utils";
 
-        this.state = {
-            databaseServer: '',
-            databaseName: '',
-            integratedSecurity: false,
-            databaseLogin: '',
-            databasePassword: '',
-            errors: []
-        }; 
+export const DatabaseForm = ({ setLoading, display, checkDatabase }) => {
+    const [values, setValues] = useState({
+        databaseServer: "",
+        databaseName: "",
+        integratedSecurity: false,
+        databaseLogin: "",
+        databasePassword: "",
+        errors: []
+    });
+
+    const [errors, setErrors] = useState([]);
+    const [retryCount, setRetryCount] = useState(0);
+
+    const {
+        databaseServer,
+        databaseName,
+        databaseLogin,
+        databasePassword,
+        integratedSecurity
+    } = values;
+
+    function checkInstallation() {
+        setTimeout(() => {
+            console.log("Check installation");
+            checkDatabase().then((success) => {
+                if (!success && retryCount < 30) {
+                    setRetryCount(retryCount + 1);
+                    checkInstallation();
+                } else {
+                    setRetryCount(0);
+                }
+            });
+        }, 1000);
     }
 
-    handleChange(event) {
+    function handleChange(event) {
         const target = event.target;
-        const value = target.type === 'checkbox' ? target.checked : target.value;
+        const value = target.type === "checkbox" ? target.checked : target.value;
         const name = target.name;
-        
-        this.setState({
-            [name]: value,
-            displaySuccess: false
+
+        setValues({
+            ...values,
+            [name]: value
         });
     }
 
-    handleSubmit(event) {
+    function handleSubmit(event) {
         event.preventDefault();
-        let errors = [];
 
-        if(this.state.databaseServer.length === 0) {
-            errors.push("Database server can't be empty");
+        let err = [];
+
+        if (databaseServer.length === 0) {
+            err.push("Database server can't be empty");
         }
 
-        if(this.state.databaseName.length === 0) {
-            errors.push("Database name can't be empty");
+        if (databaseName.length === 0) {
+            err.push("Database name can't be empty");
         }
 
-        if(!this.state.integratedSecurity) {
-            if(this.state.databaseLogin.length === 0) {
-                errors.push("Database login can't be empty");
+        if (!integratedSecurity) {
+            if (databaseLogin.length === 0) {
+                err.push("Database login can't be empty");
             }
 
-            if(this.state.databasePassword.length === 0) {
-                errors.push("Database password can't be empty");
+            if (databasePassword.length === 0) {
+                err.push("Database password can't be empty");
             }
         }
 
-        if(errors.length > 0) {
-            this.setState({errors});
+        if (errors.length > 0) {
+            setErrors(err);
             return;
         }
 
-        this.props.setLoading(true, "Saving database ...");
-        let data = {};
-        data.databaseServer = this.state.databaseServer;
-        data.databaseName = this.state.databaseName;
-        data.databaseLogin = this.state.databaseLogin;
-        data.databasePassword = this.state.databasePassword;
-        data.integratedSecurity = this.state.integratedSecurity;
+        setLoading(true, "Saving database ...");
 
-        fetch('/install/database/', 
-        {
-            method: 'POST',
-            credentials: 'include',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'RequestVerificationToken' : getXSRFToken()
-            },
-            body: JSON.stringify(data)
-        })
-        .then((res) => {
-            if (!res.ok) {
-                res.json().then((error) => {
-                    errors.push(error);
-                    
-                    this.setState({ errors }, () => {
-                        this.props.setLoading(false, "");
-                    });
-                });
-            } else {
-                setTimeout(() => this.props.checkDatabase(), 4000);
-            }
-        }).catch((error) => {
-            console.log('Error: \n', error.message);
-        });
+        let data = {
+            databaseServer,
+            databaseName,
+            databaseLogin,
+            databasePassword,
+            integratedSecurity
+        };
+
+        fetch('/install/database/',
+            {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': getXSRFToken()
+                },
+                body: JSON.stringify(data)
+            })
+            .then((res) => {
+                if (res.ok) {
+                    checkInstallation();
+                }
+                setLoading(false, "");
+            }).catch((error) => {
+                console.log(error);
+
+                if (error) {
+                    err.push(error.toString());
+                } else {
+                    err.push("Unknown error");
+                }
+                setErrors(err);
+                setLoading(false, "");
+            });
     }
 
-    renderCredentials() {
-        if(this.state.integratedSecurity) {
-            return;
-        }
-
+    function renderCredentials() {
         return (
             <div>
-                <SingleInput type="text" name="databaseLogin" title="Database login"  value={this.state.password} handleChange={this.handleChange} />
-                <SingleInput type="password" name="databasePassword" title="Database password"  value={this.state.password} handleChange={this.handleChange} />
+                <SingleInput type="text" name="databaseLogin" title="Database login" value={databaseLogin} handleChange={handleChange} />
+                <SingleInput type="password" name="databasePassword" title="Database password" value={databasePassword} handleChange={handleChange} />
             </div>
         );
     }
 
-    render() {
-        if(!this.props.display) {
-            return (null);
-        }
-
-        return (
-            <form onSubmit={this.handleSubmit}>
-                <ErrorList messages={this.state.errors} />
-                <SingleInput type="text" name="databaseServer" title="Database server" value={this.state.email} handleChange={this.handleChange} />
-                <SingleInput type="text" name="databaseName" title="Database name" value={this.state.email} handleChange={this.handleChange} />
-                <CheckboxInput name="integratedSecurity" title="Integrated security" checked={this.state.integratedSecurity} handleChange={this.handleChange} />
-                {this.renderCredentials()}
-                <div className="actions">
-                    <button type="submit" className="button button-primary">Validate</button>
-                </div>
-            </form>
-        );
+    if (!display) {
+        return (null);
     }
-}
 
-export default DatabaseForm;
+    return (
+        <form onSubmit={handleSubmit}>
+            <ErrorList messages={errors} />
+            <SingleInput type="text" name="databaseServer" title="Database server" value={databaseServer} handleChange={handleChange} />
+            <SingleInput type="text" name="databaseName" title="Database name" value={databaseName} handleChange={handleChange} />
+            <CheckboxInput name="integratedSecurity" title="Integrated security" checked={integratedSecurity} handleChange={handleChange} />
+            {!integratedSecurity && renderCredentials()}
+            <div className="actions">
+                <button type="submit" className="button button-primary">Validate</button>
+            </div>
+        </form>
+    );
+};

@@ -1,3 +1,13 @@
 export const getXSRFToken = () => {
-    return document.getElementById('RequestVerificationToken').value;
+    const element = document.getElementById('RequestVerificationToken');
+
+    return element && element.value;
+}
+
+export const checkError = (response) => {
+    if (response.status >= 200 && response.status <= 299) {
+        return response.json();
+    } else {
+        throw Error(response.statusText);
+    }
 }

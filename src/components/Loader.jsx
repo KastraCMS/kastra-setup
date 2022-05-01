@@ -1,8 +1,9 @@
+// Libs
 import React from 'react';
 
-const Loader = (props) => {
+export const Loader = ({ isLoading, message }) => {
 
-    if(!props.isLoading) {
+    if (!isLoading) {
         return (null);
     }
 
@@ -14,10 +15,8 @@ const Loader = (props) => {
                     <div className="inner two"></div>
                     <div className="inner three"></div>
                 </div>
-                <p className="message">{props.message}</p>
+                <p className="message">{message}</p>
             </div>
         </div>
     );
 }
-
-export default Loader;

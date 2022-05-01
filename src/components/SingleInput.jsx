@@ -1,12 +1,11 @@
+// Libs
 import React from 'react';
 
-const SingleInput = (props) => {
-        return (
-            <div className="field">
-                <label htmlFor={props.name}>{props.title}</label>
-                <input id={props.name} type={props.type} name={props.name} value={props.value} onChange={props.handleChange} />
-            </div>
-        );
+export const SingleInput = ({ name, title, type, value, handleChange }) => {
+    return (
+        <div className="field">
+            <label htmlFor={name}>{title}</label>
+            <input id={name} type={type} name={name} value={value} onChange={handleChange} />
+        </div>
+    );
 }
-
-export default SingleInput;
